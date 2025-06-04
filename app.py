@@ -1,4 +1,5 @@
 """Streamlit メインアプリケーション"""
+import streamlit as st
 from datetime import datetime, timedelta
 import time
 import logging
@@ -33,8 +34,6 @@ logging.basicConfig(
 
 def main():
     """メインアプリケーション"""
-    import streamlit as st
-    
     st.set_page_config(
         page_title="東京医科歯科大学周辺交通状況",
         page_icon="🚗",
