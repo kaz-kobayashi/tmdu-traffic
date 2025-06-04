@@ -23,7 +23,6 @@ Thumbs.db
 # Development files
 debug_map.html
 test_traffic_map.html
-*.zip
 *.pdf
 detailed_design.md
 implementation_plan.md
@@ -34,9 +33,12 @@ simple_app.py
 simple_test.py
 debug_map.py
 
-# Large data files
+# Large data files - exclude specific files but keep KSJ data
 N01-07L-13-01.0a_GML/
 tokyo_road_loader.zip
+
+# Allow KSJ road data file
+!N01-07L-13-01.0a_GML.zip
 
 # IDE files
 .vscode/
