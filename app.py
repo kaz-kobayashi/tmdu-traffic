@@ -1,5 +1,4 @@
 """Streamlit メインアプリケーション"""
-import streamlit as st
 from datetime import datetime, timedelta
 import time
 import logging
@@ -12,9 +11,11 @@ try:
     import folium
     from streamlit_folium import st_folium
     FOLIUM_AVAILABLE = True
+    FOLIUM_ERROR = None
 except ImportError as e:
-    st.error(f"地図ライブラリの読み込みエラー: {e}")
     FOLIUM_AVAILABLE = False
+    FOLIUM_ERROR = str(e)
+    st_folium = None
 
 # 各モジュールのインポート
 from traffic_data import TrafficDataFetcher
@@ -32,12 +33,19 @@ logging.basicConfig(
 
 def main():
     """メインアプリケーション"""
+    import streamlit as st
+    
     st.set_page_config(
         page_title="東京医科歯科大学周辺交通状況",
         page_icon="🚗",
         layout="wide",
         initial_sidebar_state="expanded"
     )
+    
+    # foliumエラーを表示（ページ設定後）
+    if not FOLIUM_AVAILABLE:
+        st.error(f"地図ライブラリの読み込みエラー: {FOLIUM_ERROR}")
+        st.info("folium と streamlit-folium のインストールが必要です")
     
     # メインタイトル
     st.title("🚗 東京医科歯科大学周辺 交通混雑度マップ")
