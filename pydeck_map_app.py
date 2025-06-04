@@ -43,7 +43,7 @@ def load_and_process_data():
         # データ読み込み
         st.info("📂 道路データを読み込み中...")
         loader = RoadDataLoader()
-        road_gdf = loader.load_road_data(bbox=BBOX_5KM)
+        road_gdf = loader.load_road_network(bbox=BBOX_5KM)
         
         if road_gdf.empty:
             st.error("❌ 道路データファイル（N01-07L-13-01.0a_GML.zip）が見つかりません")
