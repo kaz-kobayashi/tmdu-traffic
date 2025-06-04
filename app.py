@@ -163,24 +163,32 @@ def display_main_content():
         )
         
         # 地図表示
-        map_data = st_folium(
-            traffic_map, 
-            width=None,  # 自動幅調整
-            height=map_height,
-            returned_objects=["last_object_clicked"]
-        )
-        
-        # クリックされた道路の詳細表示
-        if map_data['last_object_clicked']:
-            display_clicked_road_info(map_data['last_object_clicked'])
+        if FOLIUM_AVAILABLE and traffic_map is not None:
+            map_data = st_folium(
+                traffic_map, 
+                width=None,  # 自動幅調整
+                height=map_height,
+                returned_objects=["last_object_clicked"]
+            )
+            
+            # クリックされた道路の詳細表示
+            if map_data['last_object_clicked']:
+                display_clicked_road_info(map_data['last_object_clicked'])
+        else:
+            st.error("🗺️ 地図ライブラリが利用できません")
+            st.info("地図表示には folium と streamlit-folium が必要です")
             
     else:
         st.error("🗺️ 地図データの読み込みに失敗しました")
-        st.info("基本的な地図を表示します...")
-        
-        # フォールバック地図
-        basic_map = create_basic_map()
-        st_folium(basic_map, width=None, height=500)
+        if not FOLIUM_AVAILABLE:
+            st.error("地図ライブラリが利用できません")
+        else:
+            st.info("基本的な地図を表示します...")
+            
+            # フォールバック地図
+            basic_map = create_basic_map()
+            if basic_map is not None:
+                st_folium(basic_map, width=None, height=500)
     
     # 最終更新時刻表示（日本時間）
     jst = pytz.timezone("Asia/Tokyo")

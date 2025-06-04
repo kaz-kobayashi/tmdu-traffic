@@ -1,5 +1,4 @@
 """地図可視化モジュール"""
-import folium
 import geopandas as gpd
 import pandas as pd
 from typing import Tuple, Optional, Dict, Any
@@ -10,6 +9,14 @@ from config import (
     ROAD_LINE_WIDTH, ROAD_LINE_OPACITY, CONGESTION_COLORS
 )
 
+# foliumのインポート（エラーハンドリング付き）
+try:
+    import folium
+    FOLIUM_AVAILABLE = True
+except ImportError:
+    FOLIUM_AVAILABLE = False
+    folium = None
+
 class MapVisualizer:
     """地図可視化クラス"""
     
@@ -19,7 +26,7 @@ class MapVisualizer:
         self.logger = logging.getLogger(__name__)
     
     def create_traffic_map(self, road_data: gpd.GeoDataFrame, 
-                          stats: Optional[Dict[str, Any]] = None) -> folium.Map:
+                          stats: Optional[Dict[str, Any]] = None) -> Optional[object]:
         """
         交通状況地図作成
         
@@ -28,8 +35,12 @@ class MapVisualizer:
             stats: 統計情報（オプション）
             
         Returns:
-            folium.Map: 作成された地図
+            folium.Map: 作成された地図（folium利用可能時）
         """
+        if not FOLIUM_AVAILABLE:
+            self.logger.error("Folium is not available - cannot create map")
+            return None
+            
         try:
             # ベースマップ作成
             m = self._create_base_map()
@@ -58,8 +69,11 @@ class MapVisualizer:
             # フォールバック: 基本マップのみ
             return self._create_base_map()
     
-    def _create_base_map(self) -> folium.Map:
+    def _create_base_map(self) -> Optional[object]:
         """ベースマップ作成"""
+        if not FOLIUM_AVAILABLE:
+            return None
+            
         m = folium.Map(
             location=self.center,
             zoom_start=self.zoom,
