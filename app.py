@@ -1,13 +1,20 @@
 """Streamlit メインアプリケーション"""
 import streamlit as st
-import folium
-from streamlit_folium import st_folium
 from datetime import datetime, timedelta
 import time
 import logging
 import traceback
 from pathlib import Path
 import pytz
+
+# 地図関連のインポート（エラーハンドリング付き）
+try:
+    import folium
+    from streamlit_folium import st_folium
+    FOLIUM_AVAILABLE = True
+except ImportError as e:
+    st.error(f"地図ライブラリの読み込みエラー: {e}")
+    FOLIUM_AVAILABLE = False
 
 # 各モジュールのインポート
 from traffic_data import TrafficDataFetcher
