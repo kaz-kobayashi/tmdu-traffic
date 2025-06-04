@@ -1,0 +1,53 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+venv/
+env/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Development files
+debug_map.html
+test_traffic_map.html
+*.zip
+*.pdf
+detailed_design.md
+implementation_plan.md
+system_design.md
+requirements.md
+main.py
+simple_app.py
+simple_test.py
+debug_map.py
+
+# Large data files
+N01-07L-13-01.0a_GML/
+tokyo_road_loader.zip
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Environment files
+.env
+.python-version
