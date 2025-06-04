@@ -1,7 +1,10 @@
 """地図可視化モジュール"""
 import geopandas as gpd
 import pandas as pd
-from typing import Tuple, Optional, Dict, Any
+from typing import Tuple, Optional, Dict, Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import folium
 import json
 import logging
 from config import (
@@ -92,7 +95,7 @@ class MapVisualizer:
         
         return m
     
-    def _add_road_layer(self, m: folium.Map, road_data: gpd.GeoDataFrame):
+    def _add_road_layer(self, m: object, road_data: gpd.GeoDataFrame):
         """道路レイヤー追加"""
         for idx, row in road_data.iterrows():
             try:
@@ -238,7 +241,7 @@ class MapVisualizer:
         
         return f"{road_name}: {speed_category}{speed_text}"
     
-    def _add_statistics_panel(self, m: folium.Map, stats: Dict[str, Any]):
+    def _add_statistics_panel(self, m: object, stats: Dict[str, Any]):
         """統計情報パネル追加"""
         if 'congestion_percentage' not in stats:
             return
@@ -303,7 +306,7 @@ class MapVisualizer:
         """
         m.get_root().html.add_child(folium.Element(html))
     
-    def _add_legend(self, m: folium.Map):
+    def _add_legend(self, m: object):
         """凡例追加"""
         legend_html = f"""
         <div style="position: fixed; 
@@ -340,7 +343,7 @@ class MapVisualizer:
         """
         m.get_root().html.add_child(folium.Element(legend_html))
     
-    def _add_university_marker(self, m: folium.Map):
+    def _add_university_marker(self, m: object):
         """東京医科歯科大学マーカー追加"""
         folium.Marker(
             self.center,
