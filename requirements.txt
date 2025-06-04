@@ -3,6 +3,7 @@ pandas
 numpy
 plotly
 requests
+pydeck
 folium==0.14.0
 streamlit-folium==0.13.0
 geopandas==0.13.2
