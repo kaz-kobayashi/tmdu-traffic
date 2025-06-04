@@ -34,54 +34,91 @@ logger = logging.getLogger(__name__)
 def load_and_process_data():
     """データ読み込みと処理（キャッシュ付き）"""
     if not MODULES_AVAILABLE:
-        return create_mock_data(), {"status": "mock", "error": "モジュール不可"}
+        st.error("必要なモジュールがインポートできません")
+        return pd.DataFrame(), {"status": "error", "error": "モジュール不可"}
+    
+    status_info = {"status": "processing"}
     
     try:
         # データ読み込み
-        fetcher = TrafficDataFetcher()
+        st.info("📂 道路データを読み込み中...")
         loader = RoadDataLoader()
-        processor = SpatialProcessor()
-        analyzer = CongestionAnalyzer()
-        
-        # 道路データ読み込み
         road_gdf = loader.load_road_data(bbox=BBOX_5KM)
+        
         if road_gdf.empty:
-            raise Exception("道路データの読み込みに失敗")
+            st.error("❌ 道路データファイル（N01-07L-13-01.0a_GML.zip）が見つかりません")
+            return pd.DataFrame(), {"status": "error", "error": "道路データなし"}
+        
+        st.success(f"✅ 道路データ読み込み完了: {len(road_gdf)} 路線")
         
         # 交通データ取得
+        st.info("🚗 交通データを取得中...")
+        fetcher = TrafficDataFetcher(use_mock=False)  # 実データを強制
         traffic_gdf = fetcher.fetch_traffic_data(bbox=BBOX_5KM)
+        
         if traffic_gdf.empty:
-            raise Exception("交通データの取得に失敗")
+            st.warning("⚠️ JARTIC APIからデータを取得できませんでした。モックデータを使用します。")
+            fetcher_mock = TrafficDataFetcher(use_mock=True)
+            traffic_gdf = fetcher_mock.fetch_traffic_data(bbox=BBOX_5KM)
+            status_info["data_source"] = "mock"
+        else:
+            st.success(f"✅ 交通データ取得完了: {len(traffic_gdf)} 観測点")
+            status_info["data_source"] = "real"
         
         # 空間結合
+        st.info("🗺️ 空間データ結合中...")
+        processor = SpatialProcessor(max_distance=200.0)  # 距離を200mに拡大
         joined_gdf = processor.join_traffic_roads(traffic_gdf, road_gdf)
+        
         if joined_gdf.empty:
-            raise Exception("空間結合に失敗")
+            st.error("❌ 空間結合に失敗しました")
+            return pd.DataFrame(), {"status": "error", "error": "空間結合失敗"}
+        
+        # マッチング統計
+        matched_count = len(joined_gdf[joined_gdf['road_id'].notna()])
+        match_rate = matched_count / len(joined_gdf) if len(joined_gdf) > 0 else 0
+        st.success(f"✅ 空間結合完了: {matched_count}/{len(joined_gdf)} ({match_rate:.1%}) マッチ")
         
         # 道路別集約
+        st.info("📊 道路別データ集約中...")
         road_stats = processor.aggregate_by_road(joined_gdf, road_gdf)
+        
         if road_stats.empty:
-            raise Exception("道路別集約に失敗")
+            st.error("❌ 道路別集約に失敗しました")
+            return pd.DataFrame(), {"status": "error", "error": "集約失敗"}
+        
+        st.success(f"✅ 集約完了: {len(road_stats)} 路線にデータが集約されました")
         
         # 混雑度分析
+        st.info("🚦 混雑度分析中...")
+        analyzer = CongestionAnalyzer()
         final_data = analyzer.calculate_congestion_level(road_stats)
         
         # PyDeck用データ準備
         pydeck_data = prepare_pydeck_data(final_data)
         
-        status_info = {
-            "status": "real",
+        if pydeck_data.empty:
+            st.error("❌ PyDeck用データ変換に失敗しました")
+            return pd.DataFrame(), {"status": "error", "error": "データ変換失敗"}
+        
+        st.success(f"✅ 処理完了: {len(pydeck_data)} 路線を地図表示用に変換")
+        
+        status_info.update({
+            "status": "success",
             "road_count": len(road_gdf),
             "traffic_count": len(traffic_gdf),
-            "matched_count": len(joined_gdf[joined_gdf['road_id'].notna()]),
-            "final_roads": len(final_data)
-        }
+            "matched_count": matched_count,
+            "match_rate": match_rate,
+            "final_roads": len(final_data),
+            "pydeck_roads": len(pydeck_data)
+        })
         
         return pydeck_data, status_info
         
     except Exception as e:
-        logger.error(f"Real data processing failed: {e}")
-        return create_mock_data(), {"status": "mock", "error": str(e)}
+        logger.error(f"Data processing failed: {e}")
+        st.error(f"❌ データ処理エラー: {str(e)}")
+        return pd.DataFrame(), {"status": "error", "error": str(e)}
 
 def prepare_pydeck_data(gdf):
     """GeoDataFrameをPyDeck用データに変換"""
@@ -271,10 +308,9 @@ def main():
         st.subheader("🗺️ 3D交通状況マップ")
         
         # データ読み込み
-        with st.spinner("データを読み込み中..."):
-            roads_df, status_info = load_and_process_data()
+        roads_df, status_info = load_and_process_data()
         
-        if not roads_df.empty:
+        if not roads_df.empty and status_info["status"] == "success":
             # PyDeckマップ表示
             deck = create_pydeck_map(roads_df)
             
@@ -284,23 +320,48 @@ def main():
             
             st.pydeck_chart(deck)
         else:
-            st.error("データの読み込みに失敗しました")
+            if status_info["status"] == "error":
+                st.error("❌ データ処理に失敗しました")
+                st.info("必要なファイル:")
+                st.code("N01-07L-13-01.0a_GML.zip (道路データ)")
+                st.info("このファイルをプロジェクトルートに配置してください")
+            else:
+                st.error("データの読み込みに失敗しました")
     
     with col2:
         st.subheader("📊 データ状況")
         
         # ステータス表示
-        if status_info["status"] == "real":
-            st.success("✅ リアルデータ")
+        if status_info["status"] == "success":
+            if status_info.get("data_source") == "real":
+                st.success("✅ リアル交通データ")
+            else:
+                st.warning("⚠️ モック交通データ")
+                st.caption("JARTIC APIが利用できないため")
+            
             st.metric("道路総数", status_info["road_count"])
             st.metric("交通観測点", status_info["traffic_count"])
-            st.metric("マッチング成功", status_info["matched_count"])
-            st.metric("表示道路数", status_info["final_roads"])
+            st.metric("マッチング成功", f"{status_info['matched_count']} ({status_info['match_rate']:.1%})")
+            st.metric("集約後道路数", status_info["final_roads"])
+            st.metric("表示道路数", status_info["pydeck_roads"])
+            
+        elif status_info["status"] == "error":
+            st.error("❌ データ処理エラー")
+            st.caption(f"詳細: {status_info.get('error', '不明なエラー')}")
+            
+            # 解決方法の提示
+            st.subheader("🔧 解決方法")
+            st.markdown("""
+            1. **道路データファイル確認**
+               - `N01-07L-13-01.0a_GML.zip` が必要
+               - [国土数値情報](https://nlftp.mlit.go.jp/ksj/)からダウンロード
+            
+            2. **ファイル配置**
+               - プロジェクトルートディレクトリに配置
+               - Streamlit Cloudの場合はリポジトリに追加
+            """)
         else:
-            st.warning("⚠️ モックデータ")
-            if "error" in status_info:
-                st.error(f"エラー: {status_info['error']}")
-            st.info("実データの処理に失敗したため、デモ用データを表示中")
+            st.info("⏳ データ処理中...")
         
         # 統計情報
         if not roads_df.empty:
