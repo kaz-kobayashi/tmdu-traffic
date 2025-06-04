@@ -344,19 +344,19 @@ class MapVisualizer:
         m.get_root().html.add_child(folium.Element(legend_html))
     
     def _add_university_marker(self, m: object):
-        """東京医科歯科大学マーカー追加"""
+        """センターマーカー追加"""
         folium.Marker(
             self.center,
             popup=folium.Popup(
                 """
                 <div style="font-family: 'Noto Sans JP', Arial, sans-serif; text-align: center;">
-                    <h4 style="margin: 5px; color: #333;">🏥 東京医科歯科大学</h4>
+                    <h4 style="margin: 5px; color: #333;">🏥 センター</h4>
                     <p style="margin: 5px; font-size: 12px;">湯島キャンパス</p>
                 </div>
                 """,
                 max_width=200
             ),
-            tooltip="東京医科歯科大学 湯島キャンパス",
+            tooltip="センター 湯島キャンパス",
             icon=folium.Icon(
                 color='red',
                 icon='plus',

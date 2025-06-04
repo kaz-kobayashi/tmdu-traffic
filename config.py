@@ -2,7 +2,7 @@
 from typing import Tuple
 
 # 地理的設定
-TMDU_CENTER: Tuple[float, float] = (35.7056, 139.7644)  # 東京医科歯科大学
+TMDU_CENTER: Tuple[float, float] = (35.7056, 139.7644)  # センター
 BBOX_5KM: Tuple[float, float, float, float] = (139.7194, 35.6606, 139.8094, 35.7506)
 
 # API設定

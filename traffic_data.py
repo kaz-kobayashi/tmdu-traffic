@@ -71,7 +71,7 @@ class TrafficDataFetcher:
         """モック交通データ生成"""
         minx, miny, maxx, maxy = bbox
         
-        # ランダムな観測点を生成（東京医科歯科大学周辺）
+        # ランダムな観測点を生成（センター周辺）
         np.random.seed(42)  # 再現可能な結果のため
         n_points = 200  # 観測点数を増やして道路カバー率向上
         

@@ -21,7 +21,7 @@ except ImportError as e:
 
 # ページ設定
 st.set_page_config(
-    page_title="東京医科歯科大学周辺交通状況 - PyDeck版",
+    page_title="センター周辺交通状況 - PyDeck版",
     page_icon="🗺️",
     layout="wide"
 )
@@ -232,11 +232,11 @@ def create_pydeck_map(roads_df, center=TMDU_CENTER):
         auto_highlight=True
     )
     
-    # 東京医科歯科大学マーカー
+    # センターマーカー
     university_data = [{
         'lat': center[0],
         'lon': center[1],
-        'name': '東京医科歯科大学'
+        'name': 'センター'
     }]
     
     university_layer = pdk.Layer(
@@ -273,7 +273,7 @@ def create_pydeck_map(roads_df, center=TMDU_CENTER):
     return deck
 
 def main():
-    st.title("🗺️ 東京医科歯科大学周辺 交通混雑度マップ - PyDeck版")
+    st.title("🗺️ センター周辺 交通混雑度マップ - PyDeck版")
     st.markdown("---")
     
     # サイドバー
